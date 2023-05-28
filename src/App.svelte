@@ -228,6 +228,8 @@
     display: grid;
     place-items: center;
 
+    font-size: min(1rem, 2.5vw);
+
     height: 100vh;
 
     background: var(--darkgrey);

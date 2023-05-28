@@ -37,29 +37,53 @@
 
   const board_size: number = 21;
   const delay: number = 200;
+  const init_snake_size: number = 3;
+  const init_snake_x: number = 2;
+  const init_snake_y: number = Math.floor(board_size / 2);
+  const init_direction: Direction = "RIGHT";
 
-  let snake: Position[] = [
-    { x: 4, y: Math.floor(board_size / 2), },
-    { x: 3, y: Math.floor(board_size / 2), },
-    { x: 2, y: Math.floor(board_size / 2), },
-  ];
+  let snake: Position[];
+  let direction: Direction;
+  let food: Position;
+  let start: boolean;
 
-  let direction: Direction = "RIGHT";
-  let food: Position = random_position();
-
-  let start: boolean = false;
+  init();
 
   $: if(start) {
 
     const interval = setInterval(() => {
 
-      const lost = move();
+      const alive = move();
 
-      if(lost) {
-        clearInterval(interval);
+      if(alive) {
+        return;
       }
 
+      clearInterval(interval);
+
+      init();
+
     }, delay);
+
+  }
+
+  function init() {
+    
+    snake = [];
+
+    for(let i = init_snake_size; i; i--) {
+      snake.push({
+        x: init_snake_x + i,
+        y: init_snake_y,
+      });
+    }
+
+    direction = init_direction;
+
+    food = random_position();
+
+    start = false;
+
   }
 
   function move() {
@@ -67,7 +91,14 @@
     const length: number = snake.length;
 
     let new_head_position: Position = get_new_head_position(direction, snake[0]);
+    let new_food_position: Position = random_position();
     let previous_position: Position;
+
+    const consumes_food = same_position(food, new_head_position);
+
+    if(consumes_food && same_position(new_food_position, new_head_position)) {
+      new_food_position = random_position();
+    }
 
     if(new_head_position.x < 0) return false;
     if(new_head_position.y < 0) return false;
@@ -79,14 +110,18 @@
       const position = snake[i];
       const last: boolean = i === snake.length-1;
 
-      if(last && same_position(food, new_head_position)) {
-        eat(position);
+      snake[i] = previous_position ?? new_head_position;
+
+      if(consumes_food && same_position(new_food_position, position)) {
+        new_food_position = random_position();
       }
 
-      snake[i] = previous_position ?? new_head_position;
+      if(last && consumes_food) {
+        eat(position, new_food_position);
+      }
       
       if(i && same_position(snake[i], new_head_position)) {
-        return true;
+        return false;
       }
 
       previous_position = position;
@@ -95,7 +130,7 @@
 
     snake = snake;
 
-    return false;
+    return true;
 
   }
 
@@ -130,9 +165,9 @@
 
   }
 
-  function eat(position: Position) {
+  function eat(position: Position, new_food_position: Position) {
     snake.push(position);
-    food = random_position();
+    food = new_food_position;
   }
 
   function random_position(): Position {

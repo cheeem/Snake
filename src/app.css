@@ -22,7 +22,7 @@
 :root {
 
   /* neutral palette */
-  --white: white;
+  --white: hsla(252, 10%, 100%, 1);
   --lightgrey: hsla(252, 10%, 95%, 1);
   --mediumgrey: hsla(252, 10%, 80%, 1);
   --mediumdarkgrey: hsla(252, 10%, 45%, 1);

@@ -36,7 +36,7 @@
   }
 
   const board_size: number = 21;
-  const delay: number = 200;
+  const delay: number = 150;
   const init_snake_size: number = 3;
   const init_snake_x: number = 2;
   const init_snake_y: number = Math.floor(board_size / 2);
@@ -86,7 +86,7 @@
 
   }
 
-  function move() {
+  function move(): boolean {
 
     const length: number = snake.length;
 
@@ -94,16 +94,16 @@
     let new_food_position: Position = random_position();
     let previous_position: Position;
 
+    const out_of_bounds = new_head_position.x < 0 || new_head_position.y < 0 || new_head_position.x >= board_size || new_head_position.y >= board_size;
     const consumes_food = same_position(food, new_head_position);
+
+    if(out_of_bounds) {
+      return false;
+    }
 
     if(consumes_food && same_position(new_food_position, new_head_position)) {
       new_food_position = random_position();
     }
-
-    if(new_head_position.x < 0) return false;
-    if(new_head_position.y < 0) return false;
-    if(new_head_position.x >= board_size) return false;
-    if(new_head_position.y >= board_size) return false;
 
     for(let i = 0; i < length; i++) {
 
@@ -112,16 +112,18 @@
 
       snake[i] = previous_position ?? new_head_position;
 
+      const hits_itself = i && same_position(snake[i], new_head_position);
+
+      if(hits_itself) {
+        return false;
+      }
+
       if(consumes_food && same_position(new_food_position, position)) {
         new_food_position = random_position();
       }
 
       if(last && consumes_food) {
         eat(position, new_food_position);
-      }
-      
-      if(i && same_position(snake[i], new_head_position)) {
-        return false;
       }
 
       previous_position = position;
@@ -149,7 +151,7 @@
 
   function change_direction(event: Event) {
 
-    const new_direction = key_directions[event.key];
+    const new_direction = key_directions[event.detail.direction ?? event.key];
 
     if(!new_direction) {
       return;
@@ -161,7 +163,7 @@
 
     start = true;
 
-    direction = key_directions[event.key];
+    direction = new_direction;
 
   }
 
@@ -221,6 +223,7 @@
 
   main {
     --block-size: 1.5em;
+    --speed: 200ms;
 
     display: grid;
     place-items: center;
@@ -246,9 +249,9 @@
   .snake {
     position: absolute;
 
-    background-color: var(--color1);
+    background-color: var(--color7);
 
-    transition: top 300ms, left 300ms;
+    transition: top var(--speed), left var(--speed);
   }
 
   .food {

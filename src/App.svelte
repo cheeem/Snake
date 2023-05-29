@@ -41,11 +41,15 @@
   const init_snake_x: number = 2;
   const init_snake_y: number = Math.floor(board_size / 2);
   const init_direction: Direction = "RIGHT";
+  const top_score_storage_location: string = "snake_top_score";
 
   let snake: Position[];
   let direction: Direction;
   let food: Position;
   let start: boolean;
+  let score: number;
+  
+  let top_score: number = parseInt(localStorage.getItem(top_score_storage_location)) || 0;
 
   init();
 
@@ -67,6 +71,14 @@
 
   }
 
+  $: if(score > top_score) {
+
+    top_score = score;
+
+    localStorage.setItem(top_score_storage_location, top_score.toString());
+
+  }
+
   function init() {
     
     snake = [];
@@ -84,6 +96,8 @@
 
     start = false;
 
+    score = 0;
+
   }
 
   function move(): boolean {
@@ -94,7 +108,10 @@
     let new_food_position: Position = random_position();
     let previous_position: Position;
 
-    const out_of_bounds = new_head_position.x < 0 || new_head_position.y < 0 || new_head_position.x >= board_size || new_head_position.y >= board_size;
+    const out_of_bounds = new_head_position.x < 0 
+      || new_head_position.y < 0 
+      || new_head_position.x >= board_size 
+      || new_head_position.y >= board_size;
     const consumes_food = same_position(food, new_head_position);
 
     if(out_of_bounds) {
@@ -169,6 +186,7 @@
 
   function eat(position: Position, new_food_position: Position) {
     snake.push(position);
+    score++;
     food = new_food_position;
   }
 
@@ -187,11 +205,19 @@
 
 <svelte:window on:keydown|preventDefault={change_direction} />
 
-<main use:swipe={{ timeframe: 1000, minSwipeDistance: 10, touchAction: 'none', }} on:swipe={change_direction}>
+<main use:swipe={{ timeframe: 200, minSwipeDistance: 0, touchAction: 'none', }} on:swipe={change_direction}>
 
   <div id="board" style={`
     grid-template-columns: repeat(${board_size}, 1fr);
   `}> 
+
+    <div class="score">
+      {score}
+    </div>
+
+    <div class="score top">
+      {top_score}
+    </div>
 
     {#each { length: board_size ** 2 } as _, i}
       <div class="block" style={`
@@ -239,6 +265,18 @@
     position: relative;
 
     display: grid;
+  }
+
+  .score {
+    position: absolute;
+    top: calc(var(--block-size) * -1);
+
+    font-weight: 600;
+    font-size: var(--block-size);
+  }
+
+  .top {
+    right: 0;
   }
 
   .block {
